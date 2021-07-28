@@ -22,3 +22,21 @@ class submit_successful(object):
         except NoSuchElementException:
             # succeeded
             return True
+
+
+class element_inner_html_has_changed(object):
+  """
+  An expectation for checking if the inner html of an element has changed
+  """
+  def __init__(self, locator, inner_html):
+    self.locator = locator
+    self.inner_html_initial = inner_html
+
+
+  def __call__(self, driver):
+    element = driver.find_element(*self.locator)
+    if element.get_attribute("innerHTML") != self.inner_html_initial:
+        return element
+    else:
+        return False
+

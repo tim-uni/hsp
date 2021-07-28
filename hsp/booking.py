@@ -9,7 +9,7 @@ from selenium.common.exceptions import (NoSuchElementException,
                                         WebDriverException)
 from .errors import (CourseIdNotListed, CourseIdAmbiguous,
                      CourseNotBookable, InvalidCredentials, LoadingFailed)
-from .conditions import submit_successful
+from .conditions import submit_successful, element_inner_html_has_changed
 
 
 def start_firefox():
@@ -66,25 +66,37 @@ class HSPCourse:
 
         self._booking_page = None
 
-    def _cl_click_filter_checkboxes(self):
+    def _accept_cookies_if_shown(self):
 
         assert(self.driver.current_url == self.COURSE_LIST_URL)
 
-        # wait until checkbox is loaded
-        nonbookable_cb_id = "bs_anmeldefrei"
-        checkbox_present = EC.visibility_of_element_located(
-            (By.ID, nonbookable_cb_id))
-        WebDriverWait(self.driver, self.timeout).until(checkbox_present)
+        xpath = "//h1[@class='in2-modal-heading']"
+        if WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, xpath))):
+            self.driver.find_element_by_xpath("//button[@data-in2-modal-save-button]").click()
 
-        # show non-bookable and booked-out courses
-        nonbookable_cb = self.driver.find_element_by_id(nonbookable_cb_id)
-        if not nonbookable_cb.is_selected():
-            nonbookable_cb.click()
+    def _cl_filter_by_id(self, course_id):
 
-        bookedout_cb_id = "bs_ausgebucht"
-        bookedout_cb = self.driver.find_element_by_id(bookedout_cb_id)
-        if not bookedout_cb.is_selected():
-            bookedout_cb.click()
+        assert(self.driver.current_url == self.COURSE_LIST_URL)
+
+        # wait until filter bar is loaded
+        filter_bar_id = "bs_schlagwort"
+        filter_bar_loaded = EC.visibility_of_element_located(
+            (By.ID, filter_bar_id))
+        WebDriverWait(self.driver, self.timeout).until(filter_bar_loaded)
+
+        # displays the number of courses in the course list,
+        # will be used to determine, when the filtering is complete
+        xpath = "//div[@id='bs_verlauf']"
+        filter_result_locator = (By.XPATH, xpath)
+        course_list_changed = element_inner_html_has_changed(
+            filter_result_locator,
+            self.driver.find_element(*filter_result_locator).get_attribute("innerHTML")
+        )
+
+        filter_bar = self.driver.find_element_by_id(filter_bar_id)
+        filter_bar.send_keys(course_id)
+
+        WebDriverWait(self.driver, self.timeout).until(course_list_changed)
 
     def _get_el_from_courselist(self, xpath):
 
@@ -139,7 +151,9 @@ class HSPCourse:
         self.driver.get(self.COURSE_LIST_URL)
 
         try:
-            self._cl_click_filter_checkboxes()
+
+            self._accept_cookies_if_shown()
+            self._cl_filter_by_id(self.course_id)
 
             # course site features a table:
             # extract the row that starts with the course id
@@ -152,10 +166,12 @@ class HSPCourse:
             self.level = self._cl_get_level(course_row_xpath)
             self.course_page_url = self._cl_get_course_link(course_row_xpath)
 
-        except TimeoutException:
+        except TimeoutException as e:
+            print(e)
             raise LoadingFailed("Timeout while loading course list page")
 
-        except NoSuchElementException:
+        except NoSuchElementException as e:
+            print(e)
             raise CourseIdNotListed(self.course_id)
 
     def _scrape_course_status(self):
