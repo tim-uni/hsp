@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="hsp",
-    version="1.0.5",
+    version="1.0.6",
     author="Julian Flesch",
     author_email="julianflesch@gmail.com",
     keywords="hochschulsport uni Tübingen",
