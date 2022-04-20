@@ -1,8 +1,13 @@
 from .credentials import Credentials
 from .cli import parse_args
-from .booking import (HSPCourse, start_firefox, start_headless_firefox,
-                      start_chrome, start_headless_chrome)
-from .errors import (InvalidCredentials, CourseNotBookable, CourseIdNotListed)
+from .booking import (
+    HSPCourse,
+    start_firefox,
+    start_headless_firefox,
+    start_chrome,
+    start_headless_chrome,
+)
+from .errors import InvalidCredentials, CourseNotBookable, CourseIdNotListed
 
 
 def parse_credentials(credfile):
@@ -44,15 +49,16 @@ def main():
             exit(1)
 
         if args.subcommand == "course-status":
-                print("[*] HSP Course Status")
-                print("... " + course.info())
-                print("... " + course.status())
+            print("[*] HSP Course Status")
+            print("... " + course.info())
+            print("... " + course.status())
 
         elif args.subcommand == "booking":
             print("[*] HSP Course Booking")
             credentials = parse_credentials(args.credentials)
             print("... " + course.info())
-            try: course.booking(credentials)
+            try:
+                course.booking(credentials)
             except CourseNotBookable:
                 print("... " + course.status())
                 print("[ERROR] Course cannot be booked")

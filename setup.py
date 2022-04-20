@@ -16,16 +16,11 @@ setuptools.setup(
     url="https://github.com/JulianFlesch/hsp",
     project_urls={
         "Documentation": "https://github.com/JulianFlesch/hsp",
-        "Source": "https://github.com/JulianFlesch/hsp"
-        },
+        "Source": "https://github.com/JulianFlesch/hsp",
+    },
     packages=["hsp"],
-    install_requires=[
-        "pyyaml",
-        "selenium",
-        "Gecko"
-        ],
-    scripts=[
-        "bin/hsp"],
+    install_requires=["pyyaml", "selenium", "Gecko"],
+    scripts=["bin/hsp"],
     classifiers=[
         "Topics :: Scraping ::  Hochschulsport Tübingen",
     ],

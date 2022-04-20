@@ -4,11 +4,18 @@ from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import (NoSuchElementException,
-                                        TimeoutException,
-                                        WebDriverException)
-from .errors import (CourseIdNotListed, CourseIdAmbiguous,
-                     CourseNotBookable, InvalidCredentials, LoadingFailed)
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    TimeoutException,
+    WebDriverException,
+)
+from .errors import (
+    CourseIdNotListed,
+    CourseIdAmbiguous,
+    CourseNotBookable,
+    InvalidCredentials,
+    LoadingFailed,
+)
 from .conditions import submit_successful, element_inner_html_has_changed
 
 
@@ -41,10 +48,9 @@ def start_headless_chrome():
 
 
 class HSPCourse:
-    """
-    """
+    """ """
 
-    BASE_URL = "https://buchung.hsp.uni-tuebingen.de/angebote/aktueller_zeitraum/"
+    BASE_URL = "https://www.dhsz.tu-dresden.de/angebote/aktueller_zeitraum/"
     COURSE_LIST_URL = BASE_URL + "kurssuche.html"
 
     def __init__(self, course_id, driver=None):
@@ -68,20 +74,23 @@ class HSPCourse:
 
     def _accept_cookies_if_shown(self):
 
-        assert(self.driver.current_url == self.COURSE_LIST_URL)
+        assert self.driver.current_url == self.COURSE_LIST_URL
 
         xpath = "//h1[@class='in2-modal-heading']"
-        if WebDriverWait(self.driver, 2).until(EC.presence_of_element_located((By.XPATH, xpath))):
-            self.driver.find_element_by_xpath("//button[@data-in2-modal-save-button]").click()
+        if WebDriverWait(self.driver, 2).until(
+            EC.presence_of_element_located((By.XPATH, xpath))
+        ):
+            self.driver.find_element_by_xpath(
+                "//button[@data-in2-modal-save-button]"
+            ).click()
 
     def _cl_filter_by_id(self, course_id):
 
-        assert(self.driver.current_url == self.COURSE_LIST_URL)
+        assert self.driver.current_url == self.COURSE_LIST_URL
 
         # wait until filter bar is loaded
         filter_bar_id = "bs_schlagwort"
-        filter_bar_loaded = EC.visibility_of_element_located(
-            (By.ID, filter_bar_id))
+        filter_bar_loaded = EC.visibility_of_element_located((By.ID, filter_bar_id))
         WebDriverWait(self.driver, self.timeout).until(filter_bar_loaded)
 
         # displays the number of courses in the course list,
@@ -90,7 +99,7 @@ class HSPCourse:
         filter_result_locator = (By.XPATH, xpath)
         course_list_changed = element_inner_html_has_changed(
             filter_result_locator,
-            self.driver.find_element(*filter_result_locator).get_attribute("innerHTML")
+            self.driver.find_element(*filter_result_locator).get_attribute("innerHTML"),
         )
 
         filter_bar = self.driver.find_element_by_id(filter_bar_id)
@@ -100,12 +109,12 @@ class HSPCourse:
 
     def _get_el_from_courselist(self, xpath):
 
-        assert(self.driver.current_url == self.COURSE_LIST_URL)
+        assert self.driver.current_url == self.COURSE_LIST_URL
         return self.driver.find_element_by_xpath(xpath)
 
     def _get_el_from_coursepage(self, xpath):
 
-        assert(self.driver.current_url == self.course_page_url)
+        assert self.driver.current_url == self.course_page_url
         return self.driver.find_element_by_xpath(xpath)
 
     def _cl_get_time(self, course_row_xpath):
@@ -152,7 +161,7 @@ class HSPCourse:
 
         try:
 
-            self._accept_cookies_if_shown()
+            # self._accept_cookies_if_shown()
             self._cl_filter_by_id(self.course_id)
 
             # course site features a table:
@@ -216,11 +225,13 @@ class HSPCourse:
         return driver
 
     def info(self):
-        infostr = "#{}: {} {}, {} {}".format(self.course_id or "",
-                                             self.course_name or "",
-                                             self.level or "",
-                                             self.weekday or "",
-                                             self.time or "")
+        infostr = "#{}: {} {}, {} {}".format(
+            self.course_id or "",
+            self.course_name or "",
+            self.level or "",
+            self.weekday or "",
+            self.time or "",
+        )
         return infostr
 
     def status(self):
@@ -261,58 +272,59 @@ class HSPCourse:
 
     def _bp_enter_personal_details(self, credentials):
 
-        assert (self.driver.current_url == self._booking_page)
+        assert self.driver.current_url == self._booking_page
 
         if not credentials or not credentials.is_valid:
             raise InvalidCredentials("Credentials are invalid")
 
         # gender radio select
-        gender_xpath = '//input[@name="sex"][@value="{}"]'.format(
-            credentials.gender)
+        gender_xpath = '//input[@name="sex"][@value="{}"]'.format(credentials.gender)
         self.driver.find_element_by_xpath(gender_xpath).click()
 
         # name field
         name_xpath = '//input[@id="BS_F1100"][@name="vorname"]'
-        self.driver.find_element_by_xpath(name_xpath).send_keys(
-            credentials.name)
+        self.driver.find_element_by_xpath(name_xpath).send_keys(credentials.name)
 
         # surname field
         surname_xpath = '//input[@id="BS_F1200"][@name="name"]'
-        self.driver.find_element_by_xpath(surname_xpath).send_keys(
-            credentials.surname)
+        self.driver.find_element_by_xpath(surname_xpath).send_keys(credentials.surname)
 
         # street+no field
         street_xpath = '//input[@id="BS_F1300"][@name="strasse"]'
         self.driver.find_element_by_xpath(street_xpath).send_keys(
-            credentials.street + " " + credentials.number)
+            credentials.street + " " + credentials.number
+        )
 
         # zip+city field
         city_xpath = '//input[@id="BS_F1400"][@name="ort"]'
         self.driver.find_element_by_xpath(city_xpath).send_keys(
-            credentials.zip_code + " " + credentials.city)
+            credentials.zip_code + " " + credentials.city
+        )
+
+        # birthdate
+        bd_xpath = '//input[@id="BS_F1500"][@name="geburtsdatum"]'
+        self.driver.find_element_by_xpath(bd_xpath).send_keys(credentials.birthdate)
 
         # status dropdown and matriculation number / employee phone
         status_xpath_template = '//select[@id="BS_F1600"]//option[@value="{}"]'
         status_xpath = status_xpath_template.format(credentials.status)
+        print(status_xpath)
         # student status
-        if credentials.status in ("S-UNIT", "S-aH"):
+        if credentials.status in ["S-TUD"]:
             self.driver.find_element_by_xpath(status_xpath).click()
             pid_xpath = '//input[@id="BS_F1700"][@name="matnr"]'
-            self.driver.find_element_by_xpath(pid_xpath).send_keys(
-                credentials.pid)
+            self.driver.find_element_by_xpath(pid_xpath).send_keys(credentials.pid)
         # employee status
         elif credentials.status in ("B-UNIT", "B-UKT", "B-aH"):
             self.driver.find_element_by_xpath(status_xpath).click()
             pid_xpath = '//input[@id="BS_F1700"][@name="mitnr"]'
-            self.driver.find_element_by_xpath(pid_xpath).send_keys(
-                credentials.pid)
-        elif credentials.status == "Extern":
+            self.driver.find_element_by_xpath(pid_xpath).send_keys(credentials.pid)
+        elif credentials.status == "Ext.":
             self.driver.find_element_by_xpath(status_xpath).click()
 
         # email field
         email_xpath = '//input[@id="BS_F2000"][@name="email"]'
-        self.driver.find_element_by_xpath(email_xpath).send_keys(
-            credentials.email)
+        self.driver.find_element_by_xpath(email_xpath).send_keys(credentials.email)
 
         # agree to EULA
         eula_xpath = '//input[@name="tnbed"]'
@@ -320,7 +332,7 @@ class HSPCourse:
 
     def _bp_enter_confirm_email(self, email):
 
-        assert(self.driver.current_url == self._booking_page)
+        assert self.driver.current_url == self._booking_page
 
         xpath = "//input[@class='bs_form_field'][contains(@name, 'email_check_')]"
         locator = (By.XPATH, xpath)
@@ -337,7 +349,7 @@ class HSPCourse:
         Retry submitting, until control_loc disappears
         """
 
-        assert(self.driver.current_url == self._booking_page)
+        assert self.driver.current_url == self._booking_page
 
         wait = WebDriverWait(self.driver, self.timeout)
         wait.until(submit_successful(submit_loc, control_loc))
@@ -362,7 +374,9 @@ class HSPCourse:
         xpath = "//input[@type='submit'][contains(@value, 'buchen')]"
         submit_locator = (By.XPATH, xpath)
 
-        observed_xpath = "//div[contains(@class, 'bs_text_red') and contains(@class, 'bs_text_big')]"
+        observed_xpath = (
+            "//div[contains(@class, 'bs_text_red') and contains(@class, 'bs_text_big')]"
+        )
         control_locator = (By.XPATH, observed_xpath)
 
         self._retry_submit(submit_locator, control_locator)

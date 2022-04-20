@@ -1,12 +1,14 @@
-
-confirmation.png
+confirmation*
 geckodriver.log
 *.pyc
 *.pyo
-hsp/__pycache__/
+**__pycache__/
 build/
 dist/
 sdist
 hsp.egg-info/
 test/
 hsp-venv
+.venv
+*creds*
+book.sh
