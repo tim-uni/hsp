@@ -34,8 +34,10 @@ class Credentials:
     def is_valid(self):
 
         pid_and_status = (
-            self.status in ["S-TUD"] and self.pid
-        ) or self.status == "Extern"
+            (self.status in ["S-TUD"] and self.pid)
+            or (self.status in ["MA-TUD"] and self.pid)
+            or self.status == "Extern"
+        )
 
         return (
             self.name
@@ -89,7 +91,7 @@ class Credentials:
             status = d["status"]
         except KeyError:
             raise InvalidCredentials("No status provided")
-        statuses = "S-TUD" "Ext."
+        statuses = ["S-TUD", "MA-TUD", "Ext."]
         if not status in statuses:
             raise InvalidCredentials("'status' must be one of {}".format(statuses))
         # external people don't have an employee phone or matriculation number

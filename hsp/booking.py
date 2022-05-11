@@ -307,23 +307,25 @@ class HSPCourse:
             credentials.zip_code + " " + credentials.city
         )
 
-        # birthdate
-        bd_xpath = '//input[@id="BS_F1500"][@name="geburtsdatum"]'
-        self.driver.find_element_by_xpath(bd_xpath).send_keys(credentials.birthdate)
+        # birthdate, not all courses require one
+        try:
+            bd_xpath = '//input[@id="BS_F1500"][@name="geburtsdatum"]'
+            self.driver.find_element_by_xpath(bd_xpath).send_keys(credentials.birthdate)
+        except NoSuchElementException:
+            pass
 
         # status dropdown and matriculation number / employee phone
         status_xpath_template = '//select[@id="BS_F1600"]//option[@value="{}"]'
         status_xpath = status_xpath_template.format(credentials.status)
-        print(status_xpath)
         # student status
         if credentials.status in ["S-TUD"]:
             self.driver.find_element_by_xpath(status_xpath).click()
             pid_xpath = '//input[@id="BS_F1700"][@name="matnr"]'
             self.driver.find_element_by_xpath(pid_xpath).send_keys(credentials.pid)
         # employee status
-        elif credentials.status in ("B-UNIT", "B-UKT", "B-aH"):
+        elif credentials.status in ["MA-TUD"]:
             self.driver.find_element_by_xpath(status_xpath).click()
-            pid_xpath = '//input[@id="BS_F1700"][@name="mitnr"]'
+            pid_xpath = '//input[@id="BS_F1800"][@name="mitnr"]'
             self.driver.find_element_by_xpath(pid_xpath).send_keys(credentials.pid)
         elif credentials.status == "Ext.":
             self.driver.find_element_by_xpath(status_xpath).click()
@@ -337,17 +339,10 @@ class HSPCourse:
         self.driver.find_element_by_xpath(eula_xpath).click()
 
     def _bp_enter_confirm_email(self, email):
-
-        assert self.driver.current_url == self._booking_page
-
-        xpath = "//input[@class='bs_form_field'][contains(@name, 'email_check_')]"
-        locator = (By.XPATH, xpath)
-
         try:
-            wait = WebDriverWait(self.driver, 5)
-            email_input = wait.until(EC.visibility_of_element_located(locator))
-            email_input.send_keys(email)
-        except TimeoutException:
+            xpath = "//input[@class='bs_form_field'][contains(@name, 'email_check_')]"
+            self.driver.find_element_by_xpath(xpath).send_keys(email)
+        except NoSuchElementException:
             pass
 
     def _retry_submit(self, submit_loc, control_loc):
@@ -363,7 +358,7 @@ class HSPCourse:
     def _bp_wait_until_submit(self):
         """
         Retries submitting the data, until the confirmation page is loaded.
-        Pag chage is detected by observing a checkbox field, that disappears.
+        Page change is detected by observing a checkbox field, that disappears.
         """
         xpath = "//input[@type='submit'][@value='weiter zur Buchung']"
         submit_locator = (By.XPATH, xpath)
